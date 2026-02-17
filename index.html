@@ -3,39 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Island Display - 1:1 比例還原</title>
+    <title>Island Display</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #1a1a1a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #1a1a1a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         
-        /* 嚴格執行 16:9 畫布 */
+        /* 嚴格 16:9 容器 */
         .swiper {
-            width: 100vw;
-            height: 56.25vw; 
-            max-height: 100vh;
-            max-width: 177.78vh;
+            width: 100vw; height: 56.25vw;
+            max-height: 100vh; max-width: 177.78vh;
             background: #000;
         }
 
         .island-stage {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             position: relative;
-            background-size: 100% 100%; /* 強制背景鋪滿 16:9 */
+            /* 根據你的 island.html，背景應鋪滿 */
+            background-size: 100% 100%; 
             background-position: center;
-            overflow: hidden;
+            /* 這裡模擬 1280px 的基準縮放 */
+            --base-width: 1280; 
         }
 
-        .placed-item {
+        .draggable-display {
             position: absolute;
-            /* 讓物件底部中心對準座標點，這通常是編輯器的邏輯 */
-            transform: translate(-50%, -100%); 
+            /* 對應你代碼裡的 translate(-50%, -50%) */
+            transform: translate(-50%, -50%);
             pointer-events: none;
         }
 
-        .info-tag {
-            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5);
-            color: white; padding: 5px 12px; border-radius: 15px; font-size: 12px; z-index: 100;
+        .draggable-display img {
+            width: 100%; /* 讓圖片填滿容器 */
+            display: block;
         }
     </style>
 </head>
@@ -51,70 +50,67 @@
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw9NLKQZ7UqKIPpSykOc9PdWqiszBdOqJFZp9SwmtsR33boRnGqiZSwyw3Gf9nXlzEn/exec";
-        
-        // 修正：對應你的 IslandID 與背景圖
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyDz2hqa91CXeif-ZSCf1PFKj4ylM3xVfO3bRnW966NewXzdeiRBwuVuiMfMYGhTLQ4/exec";
+        const params = new URLSearchParams(window.location.search);
+        const user = params.get('user') || 'Testing';
+
         function getBackground(islandId) {
             const bgs = {
-                'island_1': 'https://lh3.googleusercontent.com/d/1j_GFfezO8NNHnF1M-q7euOdDHOdtP8vF', // 換成你的草地背景
-                'island_2': 'https://lh3.googleusercontent.com/d/1Roy33fghpQHRS1IZk2N_MxYbY1-YKVRu', // 換成你的海洋背景
-                'island_3': 'https://lh3.googleusercontent.com/d/15OIBcHpnpYkV1hH4pk64qJjEon-y1plq'  // 換成你的沙漠背景
+                'island_1': 'https://lh3.googleusercontent.com/d/1j_GFfezO8NNHnF1M-q7euOdDHOdtP8vF',
+                'island_2': 'https://lh3.googleusercontent.com/d/1Roy33fghpQHRS1IZk2N_MxYbY1-YKVRu',
+                'island_3': 'https://lh3.googleusercontent.com/d/15OIBcHpnpYkV1hH4pk64qJjEon-y1plq',
             };
             return bgs[islandId] || bgs['island_1'];
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const targetUser = params.get('user') || 'Testing';
-
         async function init() {
-            try {
-                // 這裡假設你的 GAS 除了回傳位置，也會回傳 Asset_Library 的資訊 (ImgURL 和 Width)
-                const response = await fetch(`${GAS_API_URL}?user=${targetUser}`);
-                const islands = await response.json();
+            const res = await fetch(`${GAS_URL}?user=${user}`);
+            const islands = await res.json();
+            const container = document.getElementById('island-container');
 
-                const container = document.getElementById('island-container');
+            islands.forEach(island => {
+                const slide = document.createElement('div');
+                slide.className = 'swiper-slide';
 
-                islands.forEach(island => {
-                    const slide = document.createElement('div');
-                    slide.className = 'swiper-slide';
+                const stage = document.createElement('div');
+                stage.className = 'island-stage';
+                stage.style.backgroundImage = `url('${getBackground(island.islandId)}')`;
 
-                    const stage = document.createElement('div');
-                    stage.className = 'island-stage';
-                    stage.style.backgroundImage = `url('${getBackground(island.islandId)}')`;
-                    stage.innerHTML = `<div class="info-tag">${targetUser} - ${island.islandId}</div>`;
+                island.items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'draggable-display';
+                    
+                    // --- 複製你 island.html 的邏輯 ---
+                    let widthValue;
+                    let widthStr = String(item.width);
 
-                    // 解析物件
-                    // 注意：island.items 必須包含來自 Asset_Library 的 Width 資訊
-                    island.items.forEach(item => {
-                        const img = document.createElement('img');
-                        img.src = item.url;
-                        img.className = 'placed-item';
+                    if (widthStr.includes('%')) {
+                        // 如果是 "%"，基準是 1280
+                        const percentValue = parseFloat(widthStr) / 100;
+                        widthValue = (percentValue * 100); // 轉換為相對於 1280 畫布的百分比寬度
+                        div.style.width = widthValue + '%';
+                    } else {
+                        // 如果是 "px"，則計算 (px / 1280) * 100 得到在 16:9 下的百分比
+                        const pxValue = parseFloat(widthStr) || 150;
+                        div.style.width = (pxValue / 1280 * 100) + '%';
+                    }
 
-                        // 1. 位置還原：直接使用你存入的 leftPercent 和 topPercent
-                        img.style.left = item.leftPercent + '%';
-                        img.style.top = item.topPercent + '%';
-
-                        // 2. 比例修正：
-                        // 如果你在 island.html 的畫布寬度是 1000px，而物件寬度是 100px
-                        // 那麼這裡的寬度應設為 (100 / 1000) * 100 = 10%
-                        // 假設你 CSV 裡的 item.width 是原始像素值，而畫布基準是 1000：
-                        const baseCanvasWidth = 1000; 
-                        const calculatedWidth = (item.width / baseCanvasWidth) * 100;
-                        img.style.width = calculatedWidth + '%';
-                        
-                        stage.appendChild(img);
-                    });
-
-                    slide.appendChild(stage);
-                    container.appendChild(slide);
+                    div.style.left = item.leftPercent + '%';
+                    div.style.top = item.topPercent + '%';
+                    div.style.zIndex = item.isBottom ? "1" : "10";
+                    
+                    div.innerHTML = `<img src="${item.url}">`;
+                    stage.appendChild(div);
                 });
 
-                new Swiper('.swiper', {
-                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-                    pagination: { el: '.swiper-pagination' }
-                });
+                slide.appendChild(stage);
+                container.appendChild(slide);
+            });
 
-            } catch (e) { console.error(e); }
+            new Swiper('.swiper', {
+                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                pagination: { el: '.swiper-pagination', clickable: true }
+            });
         }
 
         init();
