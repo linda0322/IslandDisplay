@@ -1,59 +1,40 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Island Display</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <title>參觀島嶼</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <link rel="icon" type="image/svg" href="https://lh3.googleusercontent.com/d/1x9g9cC2Z3YOQXjplPElgLOtBuKixb6lD">
+    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1UL5PytrCRj0UFA9yJ2QFKowmTmBw-rZn">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #1a1a1a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        
-        /* 嚴格 16:9 容器 */
-        .swiper {
-            width: 100vw; height: 56.25vw;
-            max-height: 100vh; max-width: 177.78vh;
-            background: #000;
-        }
+        body, html {margin: 0; padding: 0; width: 100%; height: 100%; background: #1a1a1a; overflow: hidden; display: flex; align-items: center; justify-content: center;}
+        /* 🖼️ 16:9 外框 FRAME */
+        .swiper {width: 100vw; height: 56.25vw; max-height: 100vh; max-width: 177.78vh; background: #000;}
+        .island-stage {width: 100%; height: 100%; position: relative; background-size: 100% 100%; background-position: center; --base-width: 1280;}
+        /* 🧸 物件 ITEMS */
+        .draggable-display {position: absolute; transform: translate(-50%, -50%); pointer-events: none; touch-action: none;}
+        .draggable-display img {width: 100%; display: block; pointer-events: none; touch-action: none;  -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select: none; -ms-user-select: none; -moz-user-select: none;}
+        /* ➡️ 箭咀 ARROWS */
+        .swiper-button-next, .swiper-button-prev {color: #ffffff !important; text-shadow: 0 0 10px rgba(0,0,0,0.8); filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))}
+        :root {--swiper-pagination-color: white;}
+        @media (max-width: 768px) {.swiper-button-next::after, .swiper-button-prev::after {font-size: 20px !important;}}
 
-        .island-stage {
-            width: 100%; height: 100%;
-            position: relative;
-            /* 根據你的 island.html，背景應鋪滿 */
-            background-size: 100% 100%; 
-            background-position: center;
-            /* 這裡模擬 1280px 的基準縮放 */
-            --base-width: 1280; 
-        }
-
-        .draggable-display {
-            position: absolute;
-            /* 對應你代碼裡的 translate(-50%, -50%) */
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        .draggable-display img {
-            width: 100%; /* 讓圖片填滿容器 */
-            display: block;
-        }
     </style>
 </head>
 <body>
-
     <div class="swiper">
         <div class="swiper-wrapper" id="island-container"></div>
         <div class="swiper-pagination"></div>
         <div class="swiper-button-prev"></div>
         <div class="swiper-button-next"></div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyDz2hqa91CXeif-ZSCf1PFKj4ylM3xVfO3bRnW966NewXzdeiRBwuVuiMfMYGhTLQ4/exec";
         const params = new URLSearchParams(window.location.search);
         const user = params.get('user') || 'Testing';
-
         function getBackground(islandId) {
             const bgs = {
                 'island_1': 'https://lh3.googleusercontent.com/d/1j_GFfezO8NNHnF1M-q7euOdDHOdtP8vF',
@@ -62,51 +43,38 @@
             };
             return bgs[islandId] || bgs['island_1'];
         }
-
         async function init() {
             const res = await fetch(`${GAS_URL}?user=${user}`);
             const islands = await res.json();
             const container = document.getElementById('island-container');
-
             islands.forEach(island => {
                 const slide = document.createElement('div');
                 slide.className = 'swiper-slide';
-
                 const stage = document.createElement('div');
                 stage.className = 'island-stage';
                 stage.style.backgroundImage = `url('${getBackground(island.islandId)}')`;
-
                 island.items.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'draggable-display';
-                    
-                    // --- 複製你 island.html 的邏輯 ---
                     let widthValue;
                     let widthStr = String(item.width);
-
                     if (widthStr.includes('%')) {
-                        // 如果是 "%"，基準是 1280
                         const percentValue = parseFloat(widthStr) / 100;
-                        widthValue = (percentValue * 100); // 轉換為相對於 1280 畫布的百分比寬度
+                        widthValue = (percentValue * 100);
                         div.style.width = widthValue + '%';
                     } else {
-                        // 如果是 "px"，則計算 (px / 1280) * 100 得到在 16:9 下的百分比
                         const pxValue = parseFloat(widthStr) || 150;
                         div.style.width = (pxValue / 1280 * 100) + '%';
                     }
-
                     div.style.left = item.leftPercent + '%';
                     div.style.top = item.topPercent + '%';
                     div.style.zIndex = item.isBottom ? "1" : "10";
-                    
                     div.innerHTML = `<img src="${item.url}">`;
                     stage.appendChild(div);
                 });
-
                 slide.appendChild(stage);
                 container.appendChild(slide);
             });
-
             new Swiper('.swiper', {
                 navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
                 pagination: { el: '.swiper-pagination', clickable: true }
