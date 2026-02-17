@@ -13,7 +13,6 @@
                 display: flex; align-items: center; justify-content: center; 
                 -webkit-user-select: none; overscroll-behavior: none;}
         /* 🖼️ 16:9 外框 FRAME */
-        /*.swiper {width: 100vw; height: 56.25vw; max-height: 100vh; max-width: 177.78vh; position: relative; background: #000; margin: auto;}*/
         .swiper {width: 1280px; height: 720px; background: #000; position: relative; flex-shrink: 0; transform-origin: center center;}
         .island-stage {width: 100%; height: 100%; position: relative; background-size: 100% 100%; background-position: center;}
         /* 🧸 物件 ITEMS */
@@ -23,9 +22,21 @@
         .swiper-button-next, .swiper-button-prev {color: #ffffff !important; border-radius: 50%; text-shadow: 0 0 10px rgba(0,0,0,0.3);}
         :root {--swiper-pagination-color: white;}
         @media (max-width: 768px) {.swiper-button-next::after, .swiper-button-prev::after {font-size: 25px !important;}}
+        /* 🏠 返回島嶼 HOME BUTTON */
+        .home-button {position: fixed; top: 20px; left: 20px; z-index: 9999; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: #64748B;
+                      padding: 10px 18px; border-radius: 50px;
+                      display: flex; align-items: center; gap: 8px;
+                      font-size: 16px;
+                      transition: all 0.3s ease;}
+        .home-button:hover {background-color: rgba(255, 255, 255, 0.2); color: rgba(255, 255, 255, 1);}
+        .home-button:active {background-color: rgba(255, 255, 255, 0.3); color: rgba(255, 255, 255, 1); transform: scale(0.95);}
+        @media (max-height: 450px) {.home-button {top: 10px; left: 10px; padding: 6px 12px; font-size: 14px;}}
     </style>
 </head>
 <body>
+    <a href="https://linda0322.github.io/StudyLand/user/island.html" class="home-button" title="我的島嶼">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tree-palm-icon lucide-tree-palm"><path d="M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h2l1-1 1 1h4"/><path d="M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-3l-1-1-1 1h-3"/><path d="M5.89 9.71c-2.15 2.15-2.3 5.47-.35 7.43l4.24-4.25.7-.7.71-.71 2.12-2.12c-1.95-1.96-5.27-1.8-7.42.35"/><path d="M11 15.5c.5 2.5-.17 4.5-1 6.5h4c2-5.5-.5-12-1-14"/></svg>
+    </a>
     <div class="swiper">
         <div class="swiper-wrapper" id="island-container"></div>
         <div class="swiper-pagination"></div>
@@ -48,8 +59,6 @@
             return bgs[islandId] || bgs['island_1'];
         }
         
-        //function fixHeight() {const vh = window.innerHeight * 0.01; document.documentElement.style.setProperty('--vh', `${vh}px`);} window.addEventListener('resize', fixHeight); fixHeight();
-
         function handleResize() {const swiperEl = document.querySelector('.swiper');
                                  const designWidth = 1280; const designHeight = 720;
                                  const windowWidth = window.innerWidth;const windowHeight = window.innerHeight;
