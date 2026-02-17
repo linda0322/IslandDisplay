@@ -2,7 +2,7 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>參觀島嶼</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <link rel="icon" type="image/svg" href="https://lh3.googleusercontent.com/d/1x9g9cC2Z3YOQXjplPElgLOtBuKixb6lD">
@@ -37,6 +37,7 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyDz2hqa91CXeif-ZSCf1PFKj4ylM3xVfO3bRnW966NewXzdeiRBwuVuiMfMYGhTLQ4/exec";
         const params = new URLSearchParams(window.location.search);
         const user = params.get('user') || 'Testing';
+        
         function getBackground(islandId) {
             const bgs = {
                 'island_1': 'https://lh3.googleusercontent.com/d/1j_GFfezO8NNHnF1M-q7euOdDHOdtP8vF',
@@ -45,43 +46,58 @@
             };
             return bgs[islandId] || bgs['island_1'];
         }
-        async function init() {
-            const res = await fetch(`${GAS_URL}?user=${user}`);
-            const islands = await res.json();
-            const container = document.getElementById('island-container');
-            islands.forEach(island => {
-                const slide = document.createElement('div');
-                slide.className = 'swiper-slide';
-                const stage = document.createElement('div');
-                stage.className = 'island-stage';
-                stage.style.backgroundImage = `url('${getBackground(island.islandId)}')`;
-                island.items.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'draggable-display';
-                    let widthValue;
-                    let widthStr = String(item.width);
-                    if (widthStr.includes('%')) {
-                        const percentValue = parseFloat(widthStr) / 100;
-                        widthValue = (percentValue * 100);
-                        div.style.width = widthValue + '%';
-                    } else {
-                        const pxValue = parseFloat(widthStr) || 150;
-                        div.style.width = (pxValue / 1280 * 100) + '%';
-                    }
-                    div.style.left = item.leftPercent + '%';
-                    div.style.top = item.topPercent + '%';
-                    div.style.zIndex = item.isBottom ? "1" : "10";
-                    div.innerHTML = `<img src="${item.url}">`;
-                    stage.appendChild(div);
-                });
-                slide.appendChild(stage);
-                container.appendChild(slide);
-            });
-            new Swiper('.swiper', {
-                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-                pagination: { el: '.swiper-pagination', clickable: true }
-            });
+        
+        function fixHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
         }
+        window.addEventListener('resize', fixHeight);
+        fixHeight();
+
+        
+        async function init() {
+                    try {
+                        const res = await fetch(`${GAS_URL}?user=${encodeURIComponent(user)}`);
+                        const islands = await res.json();
+                        const container = document.getElementById('island-container');
+                        islands.forEach(island => {
+                            const slide = document.createElement('div');
+                            slide.className = 'swiper-slide';
+                            const stage = document.createElement('div');
+                            stage.className = 'island-stage';
+                            stage.style.backgroundImage = `url('${getBackground(island.islandId)}')`;
+                            island.items.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'draggable-display';
+                                let widthStr = String(item.width);
+                                if (widthStr.includes('%')) {
+                                    div.style.width = parseFloat(widthStr) + '%';
+                                } else {
+                                    const pxValue = parseFloat(widthStr) || 150;
+                                    div.style.width = (pxValue / 1280 * 100) + '%';
+                                }
+                                div.style.left = item.leftPercent + '%';
+                                div.style.top = item.topPercent + '%';
+                                div.style.zIndex = item.isBottom ? "1" : "10";
+                                div.innerHTML = `<img src="${item.url}">`;
+                                stage.appendChild(div);
+                            });
+                            slide.appendChild(stage);
+                            container.appendChild(slide);
+                        });
+                        new Swiper('.swiper', {
+                            navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                            pagination: { el: '.swiper-pagination', clickable: true },
+                            on: {
+                                resize: function () {
+                                    this.update();
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.error("載入失敗:", e);
+                    }
+                }
 
         init();
     </script>
