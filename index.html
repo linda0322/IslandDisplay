@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>參觀島嶼</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #2c3e50;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 16:9 外層容器 */
+        .swiper {
+            width: 100vw;
+            height: 56.25vw; /* 9/16 = 0.5625 */
+            max-height: 100vh;
+            max-width: 177.78vh; /* 16/9 = 1.7778 */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 每個島嶼的舞台 */
+        .island-stage {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+
+        /* 島嶼上的物件 */
+        .placed-item {
+            position: absolute;
+            transform: translate(-50%, -50%); /* 讓座標點落在物件中心 */
+            user-select: none;
+            pointer-events: none; /* 防止物件干擾滑動操作 */
+        }
+
+        /* 用戶名稱與島嶼編號標籤 */
+        .info-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        /* Swiper 按鈕樣式自定義 */
+        .swiper-button-next, .swiper-button-prev {
+            color: white !important;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="swiper">
+        <div class="swiper-wrapper" id="island-container">
+            </div>
+        
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script>
+        // --- 設定區 ---
+        // 請替換成你部署好的 Google Apps Script 網址
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxYFjUzMwCHhzdLTxeRMVv0lPL7ng5cFb7_Ft2SkuLUX0ZZ-mJVVaXR0WnALuwadg7x/exec";
+        
+        // 這裡就是你要求的「寫死背景圖」
+        function getBackground(islandId) {
+            const bgMap = {
+                'island_1': 'https://lh3.googleusercontent.com/d/1j_GFfezO8NNHnF1M-q7euOdDHOdtP8vF', // 草地
+                'island_2': 'https://lh3.googleusercontent.com/d/1Roy33fghpQHRS1IZk2N_MxYbY1-YKVRu', // 海洋
+                'island_3': 'https://lh3.googleusercontent.com/d/15OIBcHpnpYkV1hH4pk64qJjEon-y1plq', // 沙漠
+            };
+            return bgMap[islandId] || bgMap['island_1']; // 預設草地
+        }
+
+        // --- 邏輯區 ---
+
+        // 1. 取得網址參數 ?user=Testing
+        const params = new URLSearchParams(window.location.search);
+        const targetUser = params.get('user') || 'Testing';
+
+        async function initDisplay() {
+            try {
+                // 2. 從 GAS 抓取該用戶的島嶼資料
+                const response = await fetch(`${GAS_API_URL}?user=${targetUser}`);
+                const islands = await response.json();
+
+                if (!islands || islands.length === 0) {
+                    document.getElementById('island-container').innerHTML = `<div style="color:white; text-align:center; padding-top:20%;">找不到用戶 ${targetUser} 的島嶼資料</div>`;
+                    return;
+                }
+
+                const container = document.getElementById('island-container');
+
+                // 3. 渲染每一個島嶼
+                islands.forEach(island => {
+                    const slide = document.createElement('div');
+                    slide.className = 'swiper-slide';
+
+                    const stage = document.createElement('div');
+                    stage.className = 'island-stage';
+                    stage.style.backgroundImage = `url('${getBackground(island.islandId)}')`;
+
+                    // 插入資訊標籤
+                    stage.innerHTML = `<div class="info-tag">${targetUser} 的 ${island.islandId}</div>`;
+
+                    // 4. 渲染島嶼上的物件
+                    island.items.forEach(item => {
+                        const img = document.createElement('img');
+                        img.src = item.url;
+                        img.className = 'placed-item';
+                        
+                        // 設定位置 (使用你的 CSV 裡的百分比)
+                        img.style.left = item.leftPercent + '%';
+                        img.style.top = item.topPercent + '%';
+                        
+                        // 這裡可以根據 AssetType 寫死寬度，或預設一個寬度
+                        img.style.width = '12%'; 
+                        
+                        stage.appendChild(img);
+                    });
+
+                    slide.appendChild(stage);
+                    container.appendChild(slide);
+                });
+
+                // 5. 初始化 Swiper 滑動效果
+                new Swiper('.swiper', {
+                    loop: false,
+                    pagination: { el: '.swiper-pagination', clickable: true },
+                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                    mousewheel: true,
+                });
+
+            } catch (error) {
+                console.error("抓取資料失敗:", error);
+            }
+        }
+
+        initDisplay();
+    </script>
+</body>
+</html>
