@@ -11,7 +11,9 @@
     body, html {margin: 0; padding: 0; width: 100%; height: 100%; position: fixed;
                 background: #1a1a1a; overflow: hidden; 
                 display: flex; align-items: center; justify-content: center; 
-                -webkit-user-select: none; overscroll-behavior: none;}
+                -webkit-user-select: none; overscroll-behavior: none;
+                cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' style='font-size:36px'><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle'>☁️</text></svg>") 25 25, auto;
+    }
         /* 🖼️ 16:9 外框 FRAME */
         .swiper {width: 1280px; height: 720px; background: #000; position: relative; flex-shrink: 0; transform-origin: center center;}
         .island-stage {width: 100%; height: 100%; position: relative; background-size: 100% 100%; background-position: center;}
@@ -24,13 +26,14 @@
         @media (max-width: 768px) {.swiper-button-next::after, .swiper-button-prev::after {font-size: 25px !important;}}
         /* 🏠 返回島嶼 HOME BUTTON */
         .home-button {position: fixed; top: 20px; left: 20px; z-index: 9999; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: #64748B;
-                      padding: 10px 18px; border-radius: 50px;
-                      display: flex; align-items: center; gap: 8px;
-                      font-size: 16px;
-                      transition: all 0.3s ease;}
+                      padding: 12px; border-radius: 50px; display: flex; align-items: center; gap: 8px;
+                      font-size: 16px; cursor: pointer;
+                      transition: all 0.2s ease;}
         .home-button:hover {background-color: rgba(255, 255, 255, 0.2); color: rgba(255, 255, 255, 1);}
         .home-button:active {background-color: rgba(255, 255, 255, 0.3); color: rgba(255, 255, 255, 1); transform: scale(0.95);}
         @media (max-height: 450px) {.home-button {top: 10px; left: 10px; padding: 6px 12px; font-size: 14px;}}
+        a {cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='55' height='55' style='font-size:40px; opacity:0.8'><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle'>🌥️</text></svg>") 27 27, pointer !important;}
+
     </style>
 </head>
 <body>
